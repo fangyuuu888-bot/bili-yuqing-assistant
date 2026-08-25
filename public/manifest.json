@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "B站舆情分析助手",
+  "version": "2.0.0",
+  "description": "分析B站视频评论情感、高频话题和意见领袖账号",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "*://*.bilibili.com/*",
+    "*://*.b23.tv/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.bilibili.com/*"],
+      "js": ["content/bilibili.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://space.bilibili.com/*",
+        "*://*.bilibili.com/space/*"
+      ],
+      "js": ["content/user_profile.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["dashboard.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
