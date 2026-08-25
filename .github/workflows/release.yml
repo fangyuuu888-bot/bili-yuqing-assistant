@@ -1,0 +1,39 @@
+name: Release Extension
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/bili-yuqing-assistant.zip'
+      - '.github/workflows/release.yml'
+      - 'website/install.js'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Delete old latest release
+        continue-on-error: true
+        run: |
+          gh release delete latest --yes || true
+          git push origin :refs/tags/latest || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: B站舆情分析助手 最新版
+          files: website/bili-yuqing-assistant.zip
+          generate_release_notes: false
+          body: |
+            B站舆情分析助手 - 浏览器扩展安装包
+            下载后解压，在浏览器扩展管理页面加载已解压的扩展程序。
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
