@@ -2616,6 +2616,19 @@
       </div>
     </div>
   </div>
-  <script src="install.js"></script>
+  <script>
+  (function() {
+    var btn = document.getElementById('downloadBtn');
+    var hint = document.getElementById('downloadHint');
+    if (!btn) return;
+
+    var DOWNLOAD_URL = 'https://github.com/fangyuuu888-bot/bili-yuqing-assistant/releases/download/latest/bili-yuqing-assistant.zip';
+
+    btn.addEventListener('click', function() {
+      hint.textContent = '正在跳转到下载页面...';
+      window.location.href = DOWNLOAD_URL;
+    });
+  })();
+  </script>
 </body>
 </html>
