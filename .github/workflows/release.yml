@@ -3,10 +3,6 @@ name: Release Extension
 on:
   push:
     branches: [main]
-    paths:
-      - 'website/bili-yuqing-assistant.zip'
-      - '.github/workflows/release.yml'
-      - 'website/install.js'
 
 permissions:
   contents: write
@@ -20,7 +16,7 @@ jobs:
       - name: Delete old latest release
         continue-on-error: true
         run: |
-          gh release delete latest --yes || true
+          gh release delete latest --yes --repo ${{ github.repository }} || true
           git push origin :refs/tags/latest || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,6 +30,7 @@ jobs:
           generate_release_notes: false
           body: |
             B站舆情分析助手 - 浏览器扩展安装包
+
             下载后解压，在浏览器扩展管理页面加载已解压的扩展程序。
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
