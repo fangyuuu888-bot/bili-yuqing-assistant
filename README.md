@@ -81,8 +81,6 @@ yuqing-trae/
 
 ### 方式一：安装网站下载（推荐）
 
-![安装网站](screenshots/install-page.png)
-
 1. 访问安装网站：[https://bili-yuqing-assistant.vercel.app](https://bili-yuqing-assistant.vercel.app)
 2. 点击「下载安装包」，下载 `bili-yuqing-assistant.zip`
 3. 解压到任意文件夹
