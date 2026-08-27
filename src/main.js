@@ -1,5 +1,6 @@
 import { generateUserProfile, generateVideoAnalysis, platformConfig } from './mockData.js';
 import { analyzeComments, extractKeywords, identifyKOLs, analyzeSentiment } from './sentiment.js';
+import { fetchProfileByUrl, fetchVideoCommentsByUrl } from './standalone.js';
 import * as echarts from 'echarts';
 import { chinaGeoJson } from './chinaMap.js';
 import {
@@ -395,6 +396,36 @@ async function handleAnalyzeProfile() {
       }
     }
 
+    // 独立模式（网页版）：直接调用API
+    if (url) {
+      showProgressForProfile('正在获取用户信息...');
+      try {
+        var standaloneResp = await fetchProfileByUrl(url);
+        if (standaloneResp && standaloneResp.success && standaloneResp.profile) {
+          var sNickEl = $('collectedNickname');
+          if (sNickEl) {
+            sNickEl.textContent = '📌 ' + standaloneResp.profile.nickname;
+            sNickEl.style.display = 'inline-block';
+          }
+          var sProfileResult = analyzeRealProfile(standaloneResp.profile);
+          renderProfileResult(sProfileResult);
+          $('profileInputPanel').style.display = 'none';
+          $('profileResultPanel').style.display = 'block';
+          showToast('已分析: ' + standaloneResp.profile.nickname + ' (' + standaloneResp.profile.videoCount + ' 个视频)', 'info');
+          hideLoading();
+          return;
+        } else {
+          showToast('获取失败: ' + (standaloneResp && standaloneResp.error || '未知错误'), 'error');
+          hideLoading();
+          return;
+        }
+      } catch (e) {
+        showToast('获取失败: ' + e.message, 'error');
+        hideLoading();
+        return;
+      }
+    }
+
     if (!username && !url) {
       showToast('请输入B站用户主页链接，或在用户主页点击扩展图标采集画像', 'error');
       hideLoading();
@@ -503,6 +534,39 @@ async function handleAnalyzeVideo() {
       const result = analyzeRealVideoData(realData, platform);
       renderVideoResult(result);
     } else {
+      // 独立模式（网页版）：直接调用API
+      var bvMatch2 = url.match(/BV[a-zA-Z0-9]{10}/);
+      if (bvMatch2) {
+        showProgressForVideo('正在获取视频评论...');
+        try {
+          var sResp = await fetchVideoCommentsByUrl(url);
+          if (sResp && sResp.success && sResp.data && sResp.data.length > 0) {
+            var sResult = analyzeRealVideoData(sResp, sResp.platform || platform);
+            if (sResp.videoTitle) sResult.videoTitle = sResp.videoTitle;
+            if (sResp.videoAuthor) sResult.videoAuthor = sResp.videoAuthor;
+            if (sResp.videoPubdate) sResult.publishTime = sResp.videoPubdate;
+            if (sResp.videoViews || sResp.videoLikes || sResp.videoReplies) {
+              var sStatsParts = [];
+              if (sResp.videoViews) sStatsParts.push(sResp.videoViews.toLocaleString() + ' 播放');
+              if (sResp.videoLikes) sStatsParts.push(sResp.videoLikes.toLocaleString() + ' 点赞');
+              if (sResp.videoReplies) sStatsParts.push(sResp.videoReplies.toLocaleString() + ' 评论');
+              sResult.videoStats = sStatsParts.join(' · ');
+            }
+            renderVideoResult(sResult);
+            showToast('已分析: ' + sResp.videoTitle + ' (' + sResp.data.length + ' 条评论)', 'info');
+            hideLoading();
+            return;
+          } else {
+            showToast('获取失败: ' + (sResp && sResp.error || '未知错误'), 'error');
+            hideLoading();
+            return;
+          }
+        } catch (e) {
+          showToast('获取失败: ' + e.message, 'error');
+          hideLoading();
+          return;
+        }
+      }
       // 没有真实数据
       if (typeof chrome !== 'undefined' && chrome.runtime) {
         showToast('未检测到采集数据，请输入B站视频链接自动获取，或在视频页面点击扩展图标采集评论', 'error');

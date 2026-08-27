@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>B站舆情分析助手</title>
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#fb7299" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="舆情分析" />
+  <link rel="apple-touch-icon" href="/icons/icon128.png" />
+  <script type="module" crossorigin src="/assets/index-Dq1zKz3a.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BQ9-SFVI.css">
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="logo">
+        <span class="logo-icon">🎬</span>
+        <h1>B站舆情分析助手</h1>
+      </div>
+      <nav class="tab-nav">
+        <button class="tab-btn" data-tab="profile">
+          <span>👤</span>用户画像分析
+        </button>
+        <button class="tab-btn active" data-tab="video">
+          <span>🎯</span>视频舆情分析
+        </button>
+      </nav>
+      <a href="/install.html" class="install-link">📥 安装指南</a>
+    </header>
+
+    <main class="app-main">
+      <!-- 用户画像分析 -->
+      <section id="tab-profile" class="tab-content">
+        <div class="panel input-panel" id="profileInputPanel">
+          <div class="panel-header">
+            <h2>📥 输入用户信息</h2>
+            <p class="panel-desc">输入用户主页链接或用户名，系统将分析其发帖、评论、转发行为，生成多维画像</p>
+          </div>
+          <div class="input-form">
+            <div class="input-group">
+              <label>账号昵称 / ID</label>
+              <input type="text" id="profileUsername" placeholder="例如: 科技前沿小李" />
+            </div>
+            <div class="input-group">
+              <label>主页链接</label>
+              <input type="text" id="profileUrl" placeholder="B站用户主页链接 (如: https://space.bilibili.com/12345678)" />
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-primary" id="analyzeProfile">
+                <span>🔍</span>开始分析
+              </button>
+              <span id="collectedNickname" class="collected-nickname" style="display: none;"></span>
+              <button class="btn btn-secondary" id="loadDemoProfile">
+                <span>✨</span>加载示例
+              </button>
+              <button class="btn btn-secondary" id="clearProfile">
+                <span>🗑️</span>清空
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel result-panel" id="profileResultPanel" style="display:none">
+          <div class="panel-header">
+            <h2>📊 用户画像结果</h2>
+          </div>
+
+          <div class="profile-card">
+            <div class="profile-header">
+              <div class="avatar" id="profileAvatar">👤</div>
+              <div class="profile-basic">
+                <h3 id="profileName">--</h3>
+                <div class="profile-meta" id="profileMeta"></div>
+                <div class="profile-tags" id="profileTags"></div>
+              </div>
+              <div class="profile-level">
+                <div class="level-badge" id="profileLevel">--</div>
+                <div class="level-label">影响力等级</div>
+              </div>
+            </div>
+
+            <div class="profile-stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-value" id="statPosts">0</div>
+                <div class="stat-name">发帖数</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">💬</div>
+                <div class="stat-value" id="statComments">0</div>
+                <div class="stat-name">评论数</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">🔄</div>
+                <div class="stat-value" id="statForwards">0</div>
+                <div class="stat-name">转发数</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">❤️</div>
+                <div class="stat-value" id="statLikes">0</div>
+                <div class="stat-name">获赞数</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value" id="statFans">0</div>
+                <div class="stat-name">粉丝数</div>
+              </div>
+            </div>
+
+            <div class="profile-charts">
+              <div class="chart-item">
+                <div class="chart-title">📈 活跃趋势</div>
+                <div id="profileTrendChart" class="chart-box"></div>
+              </div>
+              <div class="chart-item">
+                <div class="chart-title">📈 情感倾向分析</div>
+                <div id="profileSentimentChart" class="chart-box"></div>
+              </div>
+              <div class="chart-item chart-item-large">
+                <div class="chart-title">🏷️ 兴趣领域分布</div>
+                <div id="profileInterestChart" class="chart-box chart-box-large"></div>
+              </div>
+            </div>
+
+            <div class="profile-section">
+              <div class="section-title-bar">
+                <span>📝 发文词云</span>
+              </div>
+              <div id="profileWordCloudChart" class="chart-box word-cloud-box"></div>
+            </div>
+
+            <div class="profile-section">
+              <div class="section-title-bar">
+                <span>🔥 参与话题</span>
+              </div>
+              <div class="topic-tags-container" id="profileTopics"></div>
+            </div>
+
+            <div class="profile-section">
+              <div class="section-title-bar">
+                <span>🔗 关系网 (@与被@)</span>
+                <span class="section-hint">红色=该用户@别人 蓝色=别人@该用户 黄色=互相关注</span>
+              </div>
+              <div id="profileRelationChart" class="chart-box"></div>
+            </div>
+
+            <div class="profile-section-2col">
+              <div class="col">
+                <div class="section-title-bar">
+                  <span>❤️ 点赞排行</span>
+                </div>
+                <div class="ranking-list" id="profileLikeRanking"></div>
+              </div>
+              <div class="col">
+                <div class="section-title-bar">
+                  <span>💬 评论与被评论排行</span>
+                </div>
+                <div class="ranking-list" id="profileCommentRanking"></div>
+              </div>
+            </div>
+
+            <div class="profile-section">
+              <div class="section-title-bar">
+                <span>📍 历次视频定位</span>
+                <span class="section-hint">气泡大小 = 视频数量</span>
+              </div>
+              <div class="location-wrapper">
+                <div id="profileLocationChart" class="chart-box location-chart"></div>
+                <div id="profileOverseaList" class="oversea-list" style="display:none;">
+                  <div class="oversea-title">🌏 海外：</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-summary">
+              <div class="summary-title">📝 AI 画像总结</div>
+              <div class="summary-content" id="profileSummary"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 视频舆情分析 -->
+      <section id="tab-video" class="tab-content active">
+        <div class="panel input-panel">
+          <div class="panel-header">
+            <h2>🎯 视频舆情分析</h2>
+            <p class="panel-desc">输入视频链接，分析评论情感倾向、高频话题和意见领袖账号</p>
+          </div>
+          <div class="input-form">
+            <div class="input-group full-width">
+              <label>视频链接</label>
+              <input type="text" id="videoUrl" placeholder="B站视频链接 (如: https://www.bilibili.com/video/BVxxxxx)" />
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-primary" id="analyzeVideo">
+                <span>🚀</span>开始分析
+              </button>
+              <button class="btn btn-secondary" id="uploadCommentsBtn">
+                <span>📤</span>上传评论文件
+              </button>
+              <button class="btn btn-secondary" id="loadDemoVideo">
+                <span>✨</span>加载示例
+              </button>
+              <button class="btn btn-secondary" id="clearVideo">
+                <span>🗑️</span>清空
+              </button>
+            </div>
+            <input type="file" id="commentsFileInput" accept=".json" style="display:none" />
+          </div>
+        </div>
+
+        <div class="panel result-panel" id="videoResultPanel" style="display:none">
+          <div class="video-info-card">
+            <div class="video-thumb" id="videoThumb">🎬</div>
+            <div class="video-info">
+              <h3 id="videoTitle">--</h3>
+              <div class="video-meta">
+                <span id="videoAuthor">--</span>
+                <span id="videoStats">--</span>
+                <span id="videoPublishTime">--</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-block">
+            <div class="section-title">
+              <span>💬 评论情感分析</span>
+              <div class="section-actions">
+                <select id="sentimentFilter">
+                  <option value="all">全部情感</option>
+                  <option value="positive">正面</option>
+                  <option value="neutral">中性</option>
+                  <option value="negative">负面</option>
+                </select>
+              </div>
+            </div>
+            <div class="sentiment-overview">
+              <div class="sentiment-card positive">
+                <div class="sentiment-label">😊 正面情感</div>
+                <div class="sentiment-value" id="sentPositive">0%</div>
+                <div class="sentiment-count" id="countPositive">0 条评论</div>
+              </div>
+              <div class="sentiment-card neutral">
+                <div class="sentiment-label">😐 中性情感</div>
+                <div class="sentiment-value" id="sentNeutral">0%</div>
+                <div class="sentiment-count" id="countNeutral">0 条评论</div>
+              </div>
+              <div class="sentiment-card negative">
+                <div class="sentiment-label">😡 负面情感</div>
+                <div class="sentiment-value" id="sentNegative">0%</div>
+                <div class="sentiment-count" id="countNegative">0 条评论</div>
+              </div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-item">
+                <div class="chart-title">📊 情感分布</div>
+                <div id="sentimentPieChart" class="chart-box"></div>
+              </div>
+              <div class="chart-item">
+                <div class="chart-title">📉 情感趋势(按时间)</div>
+                <div id="sentimentTrendChart" class="chart-box"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-block">
+            <div class="section-title">
+              <span>🔥 高频话题 / 关键词</span>
+            </div>
+            <div id="wordCloudChart" class="chart-box word-cloud-box"></div>
+            <div class="hot-topics-list" id="hotTopicsList"></div>
+          </div>
+
+          <div class="section-block">
+            <div class="section-title">
+              <span>⭐ 意见领袖 (KOL)</span>
+              <div class="section-actions">
+                <select id="kolSort">
+                  <option value="likes">按获赞数</option>
+                  <option value="comments">按评论数</option>
+                </select>
+              </div>
+            </div>
+            <div class="kol-list" id="kolList"></div>
+          </div>
+
+          <div class="section-block">
+            <div class="section-title">
+              <span>📋 评论样本</span>
+              <span class="section-subtitle" id="commentSampleCount"></span>
+            </div>
+            <div class="comment-list" id="commentList"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="loading-overlay" id="loadingOverlay" style="display:none">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">正在分析中...</div>
+      </div>
+    </div>
+
+    <toast id="toast"></toast>
+  </div>
+
+</body>
+</html>
